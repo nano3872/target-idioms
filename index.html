@@ -18,6 +18,20 @@
             --wrong-color-bg: #FFDCDC; /* 薄い不正解レッド */
             --wrong-color-border: #CD5C5C; /* 不正解ボーダー */
             --light-purple: #9370DB; /* 新しい薄いパープル */
+
+            /* 通算正解率による新しい色定義 */
+            --accuracy-color-unlearned: #F0F0F0; /* 未習: 非常に薄いグレー */
+            --accuracy-color-red: #FFCDD2;    /* 0-30%: 薄い赤 */
+            --accuracy-color-yellow: #FFF9C4; /* 30-60%: 薄い黄色 */
+            --accuracy-color-blue: #BBDEFB;   /* 60-80%: 薄い青 */
+            --accuracy-color-green: #C8E6C9;  /* 80%以上: 薄い緑 */
+            
+            /* 正解率に応じたボーダー色 */
+            --accuracy-border-unlearned: #CCCCCC;
+            --accuracy-border-red: #EF5350;
+            --accuracy-border-yellow: #FFEE58;
+            --accuracy-border-blue: #42A5F5;
+            --accuracy-border-green: #66BB6A;
         }
 
         /* 全体のスクロールを禁止し、フルハイトを確保 */
@@ -68,7 +82,8 @@
             font-family: 'M PLUS Rounded 1c', sans-serif; /* タイトルフォントをM PLUS Rounded 1cに変更 */
             color: var(--text-color);
             margin-bottom: 20px; /* マージンを調整 */
-            font-size: clamp(2.2em, 8vw, 3em); /* 画面サイズに応じてフォントサイズを調整 */
+            /* clamp()のvw値を調整し、スマホでの改行を防ぐ */
+            font-size: clamp(1.8em, 7vw, 3em); /* 最小値を少し小さく */
             text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5); /* 白い影 */
             flex-shrink: 0; /* 縮まない */
             padding-top: 5px; /* 上部に少しパディングを追加して見栄えを良く */
@@ -140,7 +155,8 @@
 
         /* 20問ごとのボタンの色パターン（サブ画面用） */
         .sub-set-button {
-            background-color: var(--accent-color); /* 黄色 */
+            /* 基本の背景色はJSで追加されるクラスで上書きされる */
+            border: 2px solid; /* ボーダーを追加 */
             display: flex; /* テキストとスコアを縦に並べるため */
             flex-direction: column;
             align-items: center;
@@ -162,21 +178,45 @@
             margin-top: 5px; /* 上部に少し余白 */
         }
 
+        /* 通算正解率に応じたボタンの色とボーダー */
+        .accuracy-unlearned {
+            background-color: var(--accuracy-color-unlearned);
+            border-color: var(--accuracy-border-unlearned);
+        }
+        .accuracy-unlearned:hover {
+            background-color: color-mix(in srgb, var(--accuracy-color-unlearned) 80%, #000);
+        }
 
-        .sub-set-button:nth-of-type(2n) {
-            background-color: var(--primary-color); /* ピンク */
+        .accuracy-red {
+            background-color: var(--accuracy-color-red);
+            border-color: var(--accuracy-border-red);
         }
-        .sub-set-button:nth-of-type(3n) {
-            background-color: var(--secondary-color); /* 青 */
+        .accuracy-red:hover {
+            background-color: color-mix(in srgb, var(--accuracy-color-red) 80%, #000);
         }
-        .sub-set-button:hover {
-             background-color: color-mix(in srgb, var(--accent-color) 80%, #000);
+
+        .accuracy-yellow {
+            background-color: var(--accuracy-color-yellow);
+            border-color: var(--accuracy-border-yellow);
         }
-        .sub-set-button:nth-of-type(2n):hover {
-            background-color: color-mix(in srgb, var(--primary-color) 80%, #000);
+        .accuracy-yellow:hover {
+            background-color: color-mix(in srgb, var(--accuracy-color-yellow) 80%, #000);
         }
-        .sub-set-button:nth-of-type(3n):hover {
-            background-color: color-mix(in srgb, var(--secondary-color) 80%, #000);
+
+        .accuracy-blue {
+            background-color: var(--accuracy-color-blue);
+            border-color: var(--accuracy-border-blue);
+        }
+        .accuracy-blue:hover {
+            background-color: color-mix(in srgb, var(--accuracy-color-blue) 80%, #000);
+        }
+
+        .accuracy-green {
+            background-color: var(--accuracy-color-green);
+            border-color: var(--accuracy-border-green);
+        }
+        .accuracy-green:hover {
+            background-color: color-mix(in srgb, var(--accuracy-color-green) 80%, #000);
         }
 
 
@@ -210,7 +250,7 @@
         #question {
             font-size: clamp(1.5em, 5vw, 2.2em); /* 画面サイズに応じてフォントサイズを調整 */
             color: var(--text-color);
-            margin-bottom: 8px; /* マージンをさらに調整 */
+            margin-bottom: 8px; /* マージンを調整 */
             min-height: auto; /* 固定高さをなくす */
             max-height: 20vh; /* 質問の最大高さをさらに制限 */
             display: flex;
@@ -609,6 +649,8 @@
                     const accuracyInfoDiv = document.createElement('div');
                     accuracyInfoDiv.classList.add('accuracy-info');
 
+                    let overallAccuracy = -1; // -1は未習を意味する
+
                     // 学習記録が存在する場合のみ正解率を計算して表示
                     if (learningRecords[setId] && learningRecords[setId].length > 0) {
                         const recordsForSet = learningRecords[setId];
@@ -621,7 +663,7 @@
                             totalAttemptedAll += rec.attempted;
                         });
                         // 0除算対策を強化: totalAttemptedAllが0の場合は0%とする
-                        const overallAccuracy = (totalAttemptedAll > 0) ? (totalCorrectAll / totalAttemptedAll) * 100 : 0;
+                        overallAccuracy = (totalAttemptedAll > 0) ? (totalCorrectAll / totalAttemptedAll) * 100 : 0;
 
                         const lastAccuracySpan = document.createElement('span');
                         lastAccuracySpan.textContent = `前回: ${!isNaN(latestRecord.accuracy) ? latestRecord.accuracy.toFixed(1) : '-.-'}%`;
@@ -641,6 +683,19 @@
                     }
                     button.appendChild(accuracyInfoDiv);
                     
+                    // 通算正解率に基づいてクラスを追加
+                    if (overallAccuracy === -1) {
+                        button.classList.add('accuracy-unlearned');
+                    } else if (overallAccuracy < 30) {
+                        button.classList.add('accuracy-red');
+                    } else if (overallAccuracy < 60) {
+                        button.classList.add('accuracy-yellow');
+                    } else if (overallAccuracy < 80) {
+                        button.classList.add('accuracy-blue');
+                    } else {
+                        button.classList.add('accuracy-green');
+                    }
+
                     // 実際のクイズに使用する問題を抽出
                     const subSetQuestionsForQuiz = selectedSuperSetQuestions.slice(subSetStartRelativeIndex, subSetEndRelativeIndex);
                     
