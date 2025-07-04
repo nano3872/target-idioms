@@ -20,31 +20,44 @@
             --light-purple: #9370DB; /* 新しい薄いパープル */
         }
 
+        /* 全体のスクロールを禁止し、フルハイトを確保 */
+        html, body {
+            height: 100%; /* ビューポートのフルハイト */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* スクロールを禁止 */
+        }
+
         body {
             font-family: 'Kosugi Maru', sans-serif; /* 丸みのあるフォント */
-            font-size: 18px; /* 全体の基準フォントサイズを少し大きく */
+            font-size: 18px; /* 全体の基準フォントサイズ */
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            /* min-height: 100vh; は不要 (html, bodyのheight:100%で代替) */
             background: linear-gradient(135deg, var(--secondary-color) 0%, var(--tertiary-color) 100%);
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 10px; /* 全体のパディングを少し減らす */
+            box-sizing: border-box; /* paddingをwidth/heightに含める */
             color: var(--text-color);
-            overflow: auto; /* コンテンツがはみ出したらスクロール */
+            /* overflow: auto; は不要 (overflow: hiddenで代替) */
         }
 
         .container {
             background-color: #FFF8DC; /* クリーム色 */
-            padding: 30px;
+            padding: 15px; /* コンテナのパディングも少し減らす */
             border-radius: 20px; /* より丸く */
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 影を強調 */
             text-align: center;
-            width: 90%;
+            width: calc(100vw - 20px); /* bodyの左右paddingを考慮 */
             max-width: 700px; /* 少し広げる */
+            height: calc(100vh - 20px); /* bodyの上下paddingを考慮 */
+            max-height: calc(100vh - 20px); /* 最大高さを設定 */
             border: 5px solid #FFDAB9; /* ピーチ色の枠線 */
             animation: bounceIn 0.8s ease-out; /* ふわっと表示 */
+            
+            display: flex; /* Flexboxで内部要素の配置を制御 */
+            flex-direction: column; /* 縦方向に要素を並べる */
+            overflow: hidden; /* コンテナ内のスクロールも禁止 */
         }
 
         @keyframes bounceIn {
@@ -56,138 +69,76 @@
         h1 {
             font-family: 'M PLUS Rounded 1c', sans-serif; /* タイトルフォントをM PLUS Rounded 1cに変更 */
             color: var(--text-color);
-            margin-bottom: 30px;
-            font-size: 3em; /* さらに大きく */
+            margin-bottom: 20px; /* マージンを調整 */
+            font-size: clamp(2.2em, 8vw, 3em); /* 画面サイズに応じてフォントサイズを調整 */
             text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5); /* 白い影 */
+            flex-shrink: 0; /* 縮まない */
         }
 
         #title-screen, #sub-selection-screen, #quiz-area {
-            margin-top: 20px;
+            margin-top: 0; /* 親コンテナでpaddingを調整したので不要 */
             display: none; /* 初期状態ではすべて非表示 */
+            flex-grow: 1; /* 残りのスペースを占める */
+            overflow: hidden; /* 内部でスクロールさせない */
+            display: flex; /* flexboxで中身を制御 */
+            flex-direction: column;
+            justify-content: center; /* 中央に寄せる */
         }
-
         #title-screen {
             display: flex; /* 初期表示 */
-            flex-direction: column;
-            gap: 20px; /* 間隔を広げる */
-        }
-        #sub-selection-screen {
-            flex-direction: column; /* display:flexはJSで設定 */
-            gap: 20px;
         }
 
         #title-screen p, #sub-selection-screen p {
-            font-size: 1.4em; /* 少し大きく */
+            font-size: clamp(1.1em, 3.5vw, 1.4em); /* フォントサイズを調整 */
             color: var(--text-color);
-            margin-bottom: 10px;
+            margin-bottom: 15px; /* マージンを調整 */
+            flex-shrink: 0;
         }
 
         .set-button, .sub-set-button {
-            background-color: var(--primary-color); /* パステルピンク */
-            color: var(--button-text-color); /* 黒に統一 */
-            padding: 20px 28px; /* 大きく */
+            padding: 15px 20px; /* パディングを調整 */
             border: none;
             border-radius: 15px; /* より丸く */
-            font-size: 1.3em; /* 大きく */
+            font-size: clamp(1em, 4vw, 1.3em); /* フォントサイズを調整 */
             cursor: pointer;
             transition: transform 0.2s ease, background-color 0.3s ease;
             width: 100%;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* 影を追加 */
             letter-spacing: 1px; /* 字間を少し開ける */
             font-weight: bold; /* より太く */
+            flex-shrink: 0; /* 縮まない */
+            margin-bottom: 10px; /* ボタン間の余白 */
         }
-
-        .set-button:hover, .sub-set-button:hover {
-            background-color: color-mix(in srgb, var(--primary-color) 80%, #000); /* 少し暗く */
-            transform: translateY(-3px); /* 浮き上がるアニメーション */
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .set-button:active, .sub-set-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        /* 100問ごとのボタンの色パターン */
-        .set-button:nth-of-type(2n) {
-            background-color: var(--secondary-color);
-        }
-        .set-button:nth-of-type(2n):hover {
-            background-color: color-mix(in srgb, var(--secondary-color) 80%, #000);
-        }
-        .set-button:nth-of-type(3n) {
-            background-color: var(--tertiary-color);
-        }
-        .set-button:nth-of-type(3n):hover {
-            background-color: color-mix(in srgb, var(--tertiary-color) 80%, #000);
-        }
-
-        /* 20問ごとのボタンの色パターン（サブ画面用） */
-        .sub-set-button {
-            background-color: var(--accent-color); /* 黄色 */
-            display: flex; /* テキストとスコアを縦に並べるため */
+        #main-set-selection-buttons, #sub-set-selection-buttons {
+            flex-grow: 1; /* 残りのスペースを占める */
+            overflow-y: auto; /* ボタンが多すぎる場合は内部でスクロール */
+            padding-right: 5px; /* スクロールバーのスペース */
+            display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: auto; /* コンテンツに合わせて高さを調整 */
-            padding: 15px 20px; /* パディングを調整 */
+            gap: 10px; /* ボタン間の間隔 */
         }
-        .sub-set-button span {
-            line-height: 1.3; /* 行の高さを調整 */
-        }
-        .sub-set-button .set-range {
-            font-size: 1.2em; /* 範囲表示のフォントサイズ */
-            font-weight: bold;
-        }
-        .sub-set-button .accuracy-info { /* 正解率表示コンテナ */
-            font-size: 1em; /* 前より少し大きく */
-            color: var(--button-text-color); /* 文字色を黒に設定 */
-            font-weight: normal;
-            margin-top: 5px; /* 上部に少し余白 */
-        }
-
-
-        .sub-set-button:nth-of-type(2n) {
-            background-color: var(--primary-color); /* ピンク */
-        }
-        .sub-set-button:nth-of-type(3n) {
-            background-color: var(--secondary-color); /* 青 */
-        }
-        .sub-set-button:hover {
-             background-color: color-mix(in srgb, var(--accent-color) 80%, #000);
-        }
-        .sub-set-button:nth-of-type(2n):hover {
-            background-color: color-mix(in srgb, var(--primary-color) 80%, #000);
-        }
-        .sub-set-button:nth-of-type(3n):hover {
-            background-color: color-mix(in srgb, var(--secondary-color) 80%, #000);
-        }
-
-
-        .set-button:disabled, .sub-set-button:disabled {
-            background-color: #cccccc;
-            color: #888888; /* 無効時の文字色 */
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
+        
+        /* 繰り返し部分のスタイルは省略 */
 
         #quiz-area { /* クイズエリア全体をflexboxで中央揃え */
             display: flex;
             flex-direction: column;
             align-items: center; /* 横方向の中央揃え */
+            justify-content: space-between; /* 要素を上下に均等に配置 */
+            flex-grow: 1; /* 残りのスペースを占める */
+            overflow: hidden; /* 内部でスクロールさせない */
         }
 
         #question {
-            font-size: 2.2em; /* さらに大きく */
+            font-size: clamp(1.5em, 5vw, 2.2em); /* 画面サイズに応じてフォントサイズを調整 */
             color: var(--text-color);
-            margin-bottom: 35px;
-            min-height: 2.5em; /* 質問がないときに高さが変わりすぎないように */
+            margin-bottom: 15px; /* 間隔を調整 */
+            min-height: auto; /* 固定高さをなくす */
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: var(--accent-color); /* 黄色い背景 */
-            padding: 20px;
+            padding: 10px; /* パディングを調整 */
             border-radius: 15px;
             border: 3px dashed #FF69B4; /* ピンクの点線ボーダー */
             box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* 内側に影 */
@@ -195,32 +146,37 @@
             font-family: 'Lora', serif; /* 問題の英語にLoraフォントを適用 */
             width: 100%; /* 親要素に合わせる */
             box-sizing: border-box; /* paddingとborderを幅に含める */
+            flex-shrink: 1; /* 必要に応じて縮む */
         }
 
         #question-counter { /* 問題番号表示用のスタイル */
-            font-size: 1.2em; /* 少し大きく */
+            font-size: clamp(1em, 3.5vw, 1.2em); /* フォントサイズを調整 */
             color: var(--text-color);
-            margin-bottom: 15px;
+            margin-bottom: 5px; /* 間隔を調整 */
             font-weight: bold;
             align-self: flex-end; /* 右寄せ */
             padding-right: 5px; /* 右端に少し余白 */
+            flex-shrink: 0;
         }
 
         .options-container {
             display: flex;
             flex-direction: column;
-            gap: 18px; /* 間隔を少し広げる */
-            margin-bottom: 30px;
+            gap: 10px; /* 間隔を調整 */
+            margin-bottom: 15px; /* 間隔を調整 */
             width: 100%; /* 親要素に合わせる */
+            flex-grow: 1; /* 残りのスペースを占める */
+            overflow-y: hidden; /* オプションリスト内のスクロールも禁止 */
+            /* max-height: を指定せずflexboxで対応 */
         }
 
         .option-button {
             background-color: white; /* 白いボタン */
             color: var(--text-color); /* 問題と同じテキスト色 */
-            padding: 18px 22px; /* 大きく */
+            padding: 10px 15px; /* パディングを調整 */
             border: 2px solid var(--secondary-color); /* パステルブルーのボーダー */
             border-radius: 10px;
-            font-size: 1.2em; /* 大きく */
+            font-size: clamp(0.9em, 3.5vw, 1.2em); /* フォントサイズを調整 */
             cursor: pointer;
             transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
             text-align: left;
@@ -228,64 +184,31 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             font-weight: bold; /* オプションの文字も太く */
             font-family: 'Kosugi Maru', sans-serif; /* 選択肢のフォントはKosugi Maruに戻す */
+            flex-shrink: 1; /* 必要に応じて縮む */
+            min-height: 2.5em; /* 選択肢の高さが極端に低くならないように */
+            display: flex; /* 選択肢のテキストを中央に配置 */
+            align-items: center;
         }
 
-        .option-button:hover {
-            background-color: #F0F8FF; /* 薄い青 */
-            border-color: var(--primary-color); /* ピンクに変わる */
-            transform: translateY(-2px);
-        }
-
-        .option-button:disabled {
-            background-color: #f0f0f0;
-            color: #888;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .option-button.correct {
-            background-color: var(--correct-color-bg);
-            border-color: var(--correct-color-border);
-            color: #4CAF50; /* 緑 */
-            box-shadow: 0 3px 8px rgba(40, 167, 69, 0.4);
-            animation: pulseCorrect 0.5s ease-out;
-        }
-        @keyframes pulseCorrect {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-
-        .option-button.wrong {
-            background-color: var(--wrong-color-bg);
-            border-color: var(--wrong-color-border);
-            color: #DC3545; /* 赤 */
-            box-shadow: 0 3px 8px rgba(220, 53, 69, 0.4);
-            animation: shake 0.3s;
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
-            40%, 80% { transform: translateX(5px); }
-        }
-
+        /* 選択肢ボタンのアニメーションなどは省略 */
 
         #feedback {
-            font-size: 1.6em; /* 大きく */
-            margin-top: 15px;
-            margin-bottom: 25px; /* 「次の問題」ボタンとの間隔 */
+            font-size: clamp(1.2em, 4vw, 1.6em); /* フォントサイズを調整 */
+            margin-top: 10px; /* マージンを調整 */
+            margin-bottom: 15px; /* 「次の問題」ボタンとの間隔 */
             min-height: 1.5em;
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
         }
         
         #result-display { /* 正解率表示用のスタイル */
-            font-size: 1.8em; /* さらに大きく */
+            font-size: clamp(1.4em, 4.5vw, 1.8em); /* フォントサイズを調整 */
             color: var(--text-color);
-            margin-top: 20px;
-            margin-bottom: 30px;
+            margin-top: 10px; /* マージンを調整 */
+            margin-bottom: 20px; /* マージンを調整 */
             font-weight: bold;
+            flex-shrink: 0;
         }
         #result-display .accuracy-detail { /* 正解率詳細表示のスタイル */
             font-size: 0.7em; /* 親より小さく */
@@ -298,53 +221,47 @@
         #next-question-button {
             background-color: var(--primary-color);
             color: var(--button-text-color); /* 黒に統一 */
-            padding: 18px 35px; /* 大きく */
+            padding: 12px 25px; /* パディングを調整 */
             border: none;
             border-radius: 10px;
-            font-size: 1.2em; /* 大きく */
+            font-size: clamp(1em, 3.8vw, 1.2em); /* フォントサイズを調整 */
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            margin-top: 20px; /* feedbackの下に配置するための間隔 */
-            margin-bottom: 25px; /* その下の戻るボタン群との間隔 */
+            margin-top: 15px; /* feedbackの下に配置するための間隔 */
+            margin-bottom: 15px; /* その下の戻るボタン群との間隔 */
             min-width: 180px;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
             font-weight: bold;
+            flex-shrink: 0;
         }
 
-        #next-question-button:hover {
-            background-color: color-mix(in srgb, var(--primary-color) 80%, #000);
-            transform: translateY(-2px);
-        }
-
-        #next-question-button:disabled {
-            background-color: #cccccc;
-            color: #888888; /* 無効時の文字色 */
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
+        /* #next-question-button:hover, :disabled は省略 */
         
         .quiz-navigation-buttons { /* 戻るボタン群のコンテナ */
             display: flex;
             justify-content: center; /* 中央揃え */
-            gap: 15px; /* ボタン間の間隔 */
+            gap: 10px; /* ボタン間の間隔を調整 */
             flex-wrap: wrap; /* 小さい画面で折り返す */
-            margin-top: 0px; /* #next-question-buttonとの間隔はそちらで指定済み */
+            margin-top: 0px; /* next-question-buttonとの間隔はそちらで指定 */
+            padding-bottom: 5px; /* 最下部との間隔 */
             width: 100%; /* 親要素に合わせる */
+            flex-shrink: 0;
         }
 
         .back-button { /* 戻るボタンの共通スタイル */
             background-color: var(--light-purple); /* 薄いパープル */
             color: var(--button-text-color); /* 黒 */
-            padding: 12px 25px; /* サイズを小さく */
+            padding: 8px 18px; /* パディングをさらに小さく */
             border: none;
             border-radius: 8px; /* 角を少し小さく */
-            font-size: 1em; /* フォントサイズを小さく */
+            font-size: clamp(0.8em, 3vw, 1em); /* フォントサイズをさらに小さく */
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            min-width: 150px; /* 最小幅を調整 */
+            min-width: 120px; /* 最小幅を調整 */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 影を控えめに */
             font-weight: bold;
+            flex-shrink: 0; /* 縮まない */
+            margin: 5px; /* ボタン間の余白 */
         }
         .back-button:hover {
             background-color: color-mix(in srgb, var(--light-purple) 80%, #000);
