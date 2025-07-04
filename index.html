@@ -71,6 +71,14 @@
             font-size: clamp(2.2em, 8vw, 3em); /* 画面サイズに応じてフォントサイズを調整 */
             text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5); /* 白い影 */
             flex-shrink: 0; /* 縮まない */
+            padding-top: 5px; /* 上部に少しパディングを追加して見栄えを良く */
+        }
+
+        /* クイズ画面がアクティブな時のh1のスタイル */
+        .container.quiz-active h1 {
+            font-size: clamp(1.2em, 4vw, 1.5em); /* より小さく */
+            margin-bottom: 5px; /* マージンをさらに減らす */
+            padding-top: 0px; /* パディングをなくす */
         }
 
         #title-screen, #sub-selection-screen, #quiz-area {
@@ -449,6 +457,7 @@
             const backToSubSelectionButton = document.getElementById('back-to-sub-selection-button');
             const backToTitleFromQuizButton = document.getElementById('back-to-title-from-quiz-button'); // 新しいボタン
             const mainTitle = document.getElementById('main-title');
+            const container = document.querySelector('.container'); // container要素を取得
 
 
             // ローカルストレージから学習記録を読み込む関数
@@ -523,6 +532,8 @@
                 quizArea.classList.add('hidden');
                 quizArea.style.display = 'none'; // quiz-areaを確実に非表示に
 
+                container.classList.remove('quiz-active'); // クイズ画面終了時はクラスを削除
+
                 mainTitle.textContent = "ターゲット英熟語";
                 mainSetSelectionButtonsContainer.innerHTML = ''; // 以前のボタンをクリア
                 resultDisplayElement.textContent = ''; // 正解率表示をリセット
@@ -560,6 +571,8 @@
                 subSelectionScreen.style.display = 'flex'; // flexで表示
                 quizArea.classList.add('hidden');
                 quizArea.style.display = 'none'; // quiz-areaを確実に非表示に
+
+                container.classList.remove('quiz-active'); // クイズ画面終了時はクラスを削除
 
                 subSetSelectionButtonsContainer.innerHTML = ''; // 以前のボタンをクリア
                 resultDisplayElement.textContent = ''; // 正解率表示をリセット
@@ -785,6 +798,8 @@
                 subSelectionScreen.style.display = 'none'; // sub-selection-screenを確実に非表示に
                 quizArea.classList.remove('hidden');
                 quizArea.style.display = 'block'; // quiz-areaを確実に表示に
+
+                container.classList.add('quiz-active'); // クイズ画面になったらクラスを追加
 
                 // クイズエリアに入った時点で戻るボタンを表示する
                 backToSubSelectionButton.classList.remove('hidden');
