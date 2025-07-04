@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ターゲット英熟語</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Lora:ital,wght@0,400..700;1,400..700&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FFB3BA; /* パステルピンク */
+            --secondary-color: #BAE1FF; /* パステルブルー */
+            --tertiary-color: #BAFFC9; /* パステルグリーン */
+            --accent-color: #FFFFBA;   /* パステルイエロー */
+            --text-color: #5C4033;     /* チョコレートブラウン */
+            --button-text-color: #000000; /* ボタンの文字色を黒に変更 */
+            --correct-color-bg: #E0FFE0; /* 薄い正解グリーン */
+            --correct-color-border: #6B8E23; /* 正解ボーダー */
+            --wrong-color-bg: #FFDCDC; /* 薄い不正解レッド */
+            --wrong-color-border: #CD5C5C; /* 不正解ボーダー */
+            --light-purple: #9370DB; /* 新しい薄いパープル */
+        }
+
+        body {
+            font-family: 'Kosugi Maru', sans-serif; /* 丸みのあるフォント */
+            font-size: 18px; /* 全体の基準フォントサイズを少し大きく */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--tertiary-color) 100%);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: var(--text-color);
+            overflow: auto; /* コンテンツがはみ出したらスクロール */
+        }
+
+        .container {
+            background-color: #FFF8DC; /* クリーム色 */
+            padding: 30px;
+            border-radius: 20px; /* より丸く */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 影を強調 */
+            text-align: center;
+            width: 90%;
+            max-width: 700px; /* 少し広げる */
+            border: 5px solid #FFDAB9; /* ピーチ色の枠線 */
+            animation: bounceIn 0.8s ease-out; /* ふわっと表示 */
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            font-family: 'M PLUS Rounded 1c', sans-serif; /* タイトルフォントをM PLUS Rounded 1cに変更 */
+            color: var(--text-color);
+            margin-bottom: 30px;
+            font-size: 3em; /* さらに大きく */
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5); /* 白い影 */
+        }
+
+        #title-screen, #sub-selection-screen, #quiz-area {
+            margin-top: 20px;
+            display: none; /* 初期状態ではすべて非表示 */
+        }
+
+        #title-screen {
+            display: flex; /* 初期表示 */
+            flex-direction: column;
+            gap: 20px; /* 間隔を広げる */
+        }
+        #sub-selection-screen {
+            flex-direction: column; /* display:flexはJSで設定 */
+            gap: 20px;
+        }
+
+        #title-screen p, #sub-selection-screen p {
+            font-size: 1.4em; /* 少し大きく */
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .set-button, .sub-set-button {
+            background-color: var(--primary-color); /* パステルピンク */
+            color: var(--button-text-color); /* 黒に統一 */
+            padding: 20px 28px; /* 大きく */
+            border: none;
+            border-radius: 15px; /* より丸く */
+            font-size: 1.3em; /* 大きく */
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* 影を追加 */
+            letter-spacing: 1px; /* 字間を少し開ける */
+            font-weight: bold; /* より太く */
+        }
+
+        .set-button:hover, .sub-set-button:hover {
+            background-color: color-mix(in srgb, var(--primary-color) 80%, #000); /* 少し暗く */
+            transform: translateY(-3px); /* 浮き上がるアニメーション */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .set-button:active, .sub-set-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 100問ごとのボタンの色パターン */
+        .set-button:nth-of-type(2n) {
+            background-color: var(--secondary-color);
+        }
+        .set-button:nth-of-type(2n):hover {
+            background-color: color-mix(in srgb, var(--secondary-color) 80%, #000);
+        }
+        .set-button:nth-of-type(3n) {
+            background-color: var(--tertiary-color);
+        }
+        .set-button:nth-of-type(3n):hover {
+            background-color: color-mix(in srgb, var(--tertiary-color) 80%, #000);
+        }
+
+        /* 20問ごとのボタンの色パターン（サブ画面用） */
+        .sub-set-button {
+            background-color: var(--accent-color); /* 黄色 */
+            display: flex; /* テキストとスコアを縦に並べるため */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: auto; /* コンテンツに合わせて高さを調整 */
+            padding: 15px 20px; /* パディングを調整 */
+        }
+        .sub-set-button span {
+            line-height: 1.3; /* 行の高さを調整 */
+        }
+        .sub-set-button .set-range {
+            font-size: 1.2em; /* 範囲表示のフォントサイズ */
+            font-weight: bold;
+        }
+        .sub-set-button .accuracy-info { /* 正解率表示コンテナ */
+            font-size: 1em; /* 前より少し大きく */
+            color: var(--button-text-color); /* 文字色を黒に設定 */
+            font-weight: normal;
+            margin-top: 5px; /* 上部に少し余白 */
+        }
+
+
+        .sub-set-button:nth-of-type(2n) {
+            background-color: var(--primary-color); /* ピンク */
+        }
+        .sub-set-button:nth-of-type(3n) {
+            background-color: var(--secondary-color); /* 青 */
+        }
+        .sub-set-button:hover {
+             background-color: color-mix(in srgb, var(--accent-color) 80%, #000);
+        }
+        .sub-set-button:nth-of-type(2n):hover {
+            background-color: color-mix(in srgb, var(--primary-color) 80%, #000);
+        }
+        .sub-set-button:nth-of-type(3n):hover {
+            background-color: color-mix(in srgb, var(--secondary-color) 80%, #000);
+        }
+
+
+        .set-button:disabled, .sub-set-button:disabled {
+            background-color: #cccccc;
+            color: #888888; /* 無効時の文字色 */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        #quiz-area { /* クイズエリア全体をflexboxで中央揃え */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 横方向の中央揃え */
+        }
+
+        #question {
+            font-size: 2.2em; /* さらに大きく */
+            color: var(--text-color);
+            margin-bottom: 35px;
+            min-height: 2.5em; /* 質問がないときに高さが変わりすぎないように */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--accent-color); /* 黄色い背景 */
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px dashed #FF69B4; /* ピンクの点線ボーダー */
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* 内側に影 */
+            font-weight: bold;
+            font-family: 'Lora', serif; /* 問題の英語にLoraフォントを適用 */
+            width: 100%; /* 親要素に合わせる */
+            box-sizing: border-box; /* paddingとborderを幅に含める */
+        }
+
+        #question-counter { /* 問題番号表示用のスタイル */
+            font-size: 1.2em; /* 少し大きく */
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+            align-self: flex-end; /* 右寄せ */
+            padding-right: 5px; /* 右端に少し余白 */
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 18px; /* 間隔を少し広げる */
+            margin-bottom: 30px;
+            width: 100%; /* 親要素に合わせる */
+        }
+
+        .option-button {
+            background-color: white; /* 白いボタン */
+            color: var(--text-color); /* 問題と同じテキスト色 */
+            padding: 18px 22px; /* 大きく */
+            border: 2px solid var(--secondary-color); /* パステルブルーのボーダー */
+            border-radius: 10px;
+            font-size: 1.2em; /* 大きく */
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+            text-align: left;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-weight: bold; /* オプションの文字も太く */
+            font-family: 'Kosugi Maru', sans-serif; /* 選択肢のフォントはKosugi Maruに戻す */
+        }
+
+        .option-button:hover {
+            background-color: #F0F8FF; /* 薄い青 */
+            border-color: var(--primary-color); /* ピンクに変わる */
+            transform: translateY(-2px);
+        }
+
+        .option-button:disabled {
+            background-color: #f0f0f0;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .option-button.correct {
+            background-color: var(--correct-color-bg);
+            border-color: var(--correct-color-border);
+            color: #4CAF50; /* 緑 */
+            box-shadow: 0 3px 8px rgba(40, 167, 69, 0.4);
+            animation: pulseCorrect 0.5s ease-out;
+        }
+        @keyframes pulseCorrect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .option-button.wrong {
+            background-color: var(--wrong-color-bg);
+            border-color: var(--wrong-color-border);
+            color: #DC3545; /* 赤 */
+            box-shadow: 0 3px 8px rgba(220, 53, 69, 0.4);
+            animation: shake 0.3s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+
+        #feedback {
+            font-size: 1.6em; /* 大きく */
+            margin-top: 15px;
+            margin-bottom: 25px; /* 「次の問題」ボタンとの間隔 */
+            min-height: 1.5em;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+        }
+        
+        #result-display { /* 正解率表示用のスタイル */
+            font-size: 1.8em; /* さらに大きく */
+            color: var(--text-color);
+            margin-top: 20px;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        #result-display .accuracy-detail { /* 正解率詳細表示のスタイル */
+            font-size: 0.7em; /* 親より小さく */
+            display: block; /* 独立した行に */
+            color: var(--button-text-color); /* 文字色を黒に設定 */
+            margin-top: 8px; /* 上に少し余白 */
+        }
+
+
+        #next-question-button {
+            background-color: var(--primary-color);
+            color: var(--button-text-color); /* 黒に統一 */
+            padding: 18px 35px; /* 大きく */
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em; /* 大きく */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px; /* feedbackの下に配置するための間隔 */
+            margin-bottom: 25px; /* その下の戻るボタン群との間隔 */
+            min-width: 180px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            font-weight: bold;
+        }
+
+        #next-question-button:hover {
+            background-color: color-mix(in srgb, var(--primary-color) 80%, #000);
+            transform: translateY(-2px);
+        }
+
+        #next-question-button:disabled {
+            background-color: #cccccc;
+            color: #888888; /* 無効時の文字色 */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        
+        .quiz-navigation-buttons { /* 戻るボタン群のコンテナ */
+            display: flex;
+            justify-content: center; /* 中央揃え */
+            gap: 15px; /* ボタン間の間隔 */
+            flex-wrap: wrap; /* 小さい画面で折り返す */
+            margin-top: 0px; /* #next-question-buttonとの間隔はそちらで指定済み */
+            width: 100%; /* 親要素に合わせる */
+        }
+
+        .back-button { /* 戻るボタンの共通スタイル */
+            background-color: var(--light-purple); /* 薄いパープル */
+            color: var(--button-text-color); /* 黒 */
+            padding: 12px 25px; /* サイズを小さく */
+            border: none;
+            border-radius: 8px; /* 角を少し小さく */
+            font-size: 1em; /* フォントサイズを小さく */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            min-width: 150px; /* 最小幅を調整 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 影を控えめに */
+            font-weight: bold;
+        }
+        .back-button:hover {
+            background-color: color-mix(in srgb, var(--light-purple) 80%, #000);
+            transform: translateY(-2px);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="main-title">ターゲット英熟語</h1>
+
+        <div id="title-screen">
+            <p>学習する大範囲を選んでください</p>
+            <div id="main-set-selection-buttons">
+                </div>
+        </div>
+
+        <div id="sub-selection-screen" class="hidden">
+            <p id="sub-selection-text"></p>
+            <div id="sub-set-selection-buttons">
+                </div>
+            <button id="back-to-main-button" class="back-button">メインメニューに戻る</button>
+        </div>
+
+        <div id="quiz-area" class="hidden">
+            <p id="question-counter"></p> <p id="question"></p>
+            <div id="options-container" class="options-container">
+                </div>
+            <p id="feedback"></p>
+            <p id="result-display"></p> <button id="next-question-button" class="hidden">次の問題</button>
+            <div class="quiz-navigation-buttons">
+                <button id="back-to-sub-selection-button" class="back-button hidden">範囲選択に戻る</button>
+                <button id="back-to-title-from-quiz-button" class="back-button hidden">タイトルへ戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let allQuestionsData = []; // 全てのJSONデータを格納する
+            const QUESTIONS_PER_SUPER_SET = 100; // 大範囲あたりの問題数
+            const QUESTIONS_PER_SUB_SET = 20;    // 小範囲あたりの問題数
+            const LOCAL_STORAGE_KEY = 'quizLearningRecords'; // ローカルストレージのキー
+
+            let selectedSuperSetQuestions = []; // 選択された大範囲の問題を保持
+            let currentSuperSetStartIndex = 0; // 現在選択中の大範囲の元データにおける開始インデックス
+            let currentSubSetId = ''; // 現在学習している小範囲のID (例: "1-20")
+
+            let currentQuestions = []; // 現在の小範囲セットの問題
+            let currentIndex = 0;
+            let correctAnswersCount = 0; // 今回のセットの正解数を追跡するための変数
+
+            const titleScreen = document.getElementById('title-screen');
+            const mainSetSelectionButtonsContainer = document.getElementById('main-set-selection-buttons');
+            
+            const subSelectionScreen = document.getElementById('sub-selection-screen');
+            const subSelectionText = document.getElementById('sub-selection-text');
+            const subSetSelectionButtonsContainer = document.getElementById('sub-set-selection-buttons');
+            const backToMainButton = document.getElementById('back-to-main-button');
+
+            const quizArea = document.getElementById('quiz-area');
+            const questionCounterElement = document.getElementById('question-counter'); // 問題番号表示用要素
+            const questionElement = document.getElementById('question');
+            const optionsContainer = document.getElementById('options-container');
+            const feedbackElement = document.getElementById('feedback');
+            const resultDisplayElement = document.getElementById('result-display'); // 正解率表示用要素
+            const nextQuestionButton = document.getElementById('next-question-button');
+            const backToSubSelectionButton = document.getElementById('back-to-sub-selection-button');
+            const backToTitleFromQuizButton = document.getElementById('back-to-title-from-quiz-button'); // 新しいボタン
+            const mainTitle = document.getElementById('main-title');
+
+
+            // ローカルストレージから学習記録を読み込む関数
+            function loadLearningRecords() {
+                try {
+                    const recordsString = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (recordsString === null || recordsString === 'undefined') { // nullまたは'undefined'文字列をチェック
+                        console.log('No learning records found in localStorage or records are invalid. Initializing empty.');
+                        return {};
+                    }
+                    const records = JSON.parse(recordsString);
+                    console.log('Loaded learning records:', records); // デバッグ用
+                    return records;
+                } catch (e) {
+                    console.error("Failed to parse learning records from localStorage, or records are corrupted:", e);
+                    // JSONパースエラーや破損時は空のオブジェクトを返し、新しい記録が上書きされるようにする
+                    alert("学習記録の読み込みに失敗しました。記録が破損している可能性があります。");
+                    return {}; 
+                }
+            }
+
+            // ローカルストレージに学習記録を保存する関数
+            function saveLearningRecord(setId, correct, attempted) {
+                const records = loadLearningRecords(); // 最新の記録を読み込む
+                if (!records[setId]) {
+                    records[setId] = [];
+                }
+                records[setId].push({
+                    timestamp: new Date().toISOString(),
+                    correct: correct,
+                    attempted: attempted,
+                    accuracy: (attempted > 0) ? (correct / attempted) * 100 : 0 // 今回の正解率を保存 (0除算対策)
+                });
+                // オプション: 保存する記録の数を制限する場合
+                // records[setId] = records[setId].slice(-10); // 最新10件のみ保持など
+
+                try {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(records));
+                    console.log(`Saved record for ${setId}: Correct ${correct}/${attempted}`); // デバッグ用
+                } catch (e) {
+                    console.error("Failed to save learning record to localStorage:", e);
+                    alert("学習記録の保存に失敗しました。ブラウザのストレージ容量を確認してください。");
+                }
+            }
+
+            // JSONデータを読み込む関数
+            async function loadQuestions() {
+                try {
+                    const response = await fetch('questions.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    allQuestionsData = await response.json();
+                    console.log('All questions loaded:', allQuestionsData);
+                    
+                    // 初期表示はタイトル画面
+                    displayTitleScreen(); 
+                } catch (error) {
+                    console.error('Failed to load questions:', error);
+                    mainTitle.textContent = "問題の読み込みに失敗しました。";
+                    // エラーメッセージの表示を分かりやすくするため、titleScreenを表示状態にする
+                    titleScreen.style.display = 'flex'; 
+                    titleScreen.innerHTML = '<p style="color: red;">エラーが発生しました。ファイルを確認してください。</p>';
+                }
+            }
+
+            // メインのタイトル画面表示（100問ごと）
+            function displayTitleScreen() {
+                titleScreen.style.display = 'flex'; // flexで表示
+                subSelectionScreen.classList.add('hidden');
+                subSelectionScreen.style.display = 'none'; // sub-selection-screenを確実に非表示に
+                quizArea.classList.add('hidden');
+                quizArea.style.display = 'none'; // quiz-areaを確実に非表示に
+
+                mainTitle.textContent = "ターゲット英熟語";
+                mainSetSelectionButtonsContainer.innerHTML = ''; // 以前のボタンをクリア
+                resultDisplayElement.textContent = ''; // 正解率表示をリセット
+                questionCounterElement.textContent = ''; // 問題番号をクリア
+
+                const totalQuestions = allQuestionsData.length;
+                let currentStart = 1;
+                while (currentStart <= totalQuestions) {
+                    const button = document.createElement('button');
+                    button.classList.add('set-button');
+                    const currentEnd = Math.min(currentStart + QUESTIONS_PER_SUPER_SET - 1, totalQuestions);
+                    button.textContent = `${currentStart}-${currentEnd}`;
+                    
+                    // 大範囲の開始と終了インデックスを渡す (0-indexed)
+                    const startIndex = currentStart - 1;
+                    const endIndex = currentEnd; // sliceはendIndexを含まないためそのまま
+
+                    // ここで、この大範囲の全問題をselectedSuperSetQuestionsに格納しておくための処理
+                    // をクリックハンドラに含める。
+                    button.addEventListener('click', () => {
+                        selectedSuperSetQuestions = allQuestionsData.slice(startIndex, endIndex);
+                        currentSuperSetStartIndex = startIndex; // 選択された大範囲の開始インデックスを保存
+                        displaySubSelectionScreen(currentSuperSetStartIndex, endIndex);
+                    });
+                    mainSetSelectionButtonsContainer.appendChild(button);
+                    currentStart += QUESTIONS_PER_SUPER_SET;
+                }
+            }
+
+            // サブ選択画面表示（20問ごと）
+            function displaySubSelectionScreen(superSetStartIndex, superSetEndIndex) {
+                titleScreen.classList.add('hidden');
+                titleScreen.style.display = 'none'; // title-screenを確実に非表示に
+                subSelectionScreen.classList.remove('hidden');
+                subSelectionScreen.style.display = 'flex'; // flexで表示
+                quizArea.classList.add('hidden');
+                quizArea.style.display = 'none'; // quiz-areaを確実に非表示に
+
+                subSetSelectionButtonsContainer.innerHTML = ''; // 以前のボタンをクリア
+                resultDisplayElement.textContent = ''; // 正解率表示をリセット
+                questionCounterElement.textContent = ''; // 問題番号をクリア
+
+                // ここで毎回最新の学習記録を読み込む
+                const learningRecords = loadLearningRecords(); 
+                console.log('Records for sub-selection screen refresh:', learningRecords); // デバッグ用
+
+                // selectedSuperSetQuestions は既にdisplayTitleScreenで設定済み
+                subSelectionText.textContent = `範囲 ${superSetStartIndex + 1} - ${superSetEndIndex} 内のセットを選んでください`;
+
+                // 大範囲の問題を小範囲に分割しボタンを生成
+                for (let i = 0; i < selectedSuperSetQuestions.length; i += QUESTIONS_PER_SUB_SET) {
+                    const button = document.createElement('button');
+                    button.classList.add('sub-set-button');
+                    
+                    // selectedSuperSetQuestions内での開始と終了インデックス
+                    const subSetStartRelativeIndex = i;
+                    const subSetEndRelativeIndex = Math.min(i + QUESTIONS_PER_SUB_SET, selectedSuperSetQuestions.length);
+                    
+                    // 表示用の問題番号
+                    const subSetActualStart = superSetStartIndex + subSetStartRelativeIndex + 1;
+                    const subSetActualEnd = superSetStartIndex + subSetEndRelativeIndex;
+                    
+                    const setId = `${subSetActualStart}-${subSetActualEnd}`; // セットIDを定義
+
+                    // ボタンのテキストを設定
+                    const rangeSpan = document.createElement('span');
+                    rangeSpan.classList.add('set-range');
+                    rangeSpan.textContent = setId;
+                    button.appendChild(rangeSpan);
+
+                    const accuracyInfoDiv = document.createElement('div');
+                    accuracyInfoDiv.classList.add('accuracy-info');
+
+                    // 学習記録が存在する場合のみ正解率を計算して表示
+                    if (learningRecords[setId] && learningRecords[setId].length > 0) {
+                        const recordsForSet = learningRecords[setId];
+                        const latestRecord = recordsForSet[recordsForSet.length - 1]; // 最新の記録
+
+                        let totalCorrectAll = 0;
+                        let totalAttemptedAll = 0;
+                        recordsForSet.forEach(rec => {
+                            totalCorrectAll += rec.correct;
+                            totalAttemptedAll += rec.attempted;
+                        });
+                        // 0除算対策を強化: totalAttemptedAllが0の場合は0%とする
+                        const overallAccuracy = (totalAttemptedAll > 0) ? (totalCorrectAll / totalAttemptedAll) * 100 : 0;
+
+                        const lastAccuracySpan = document.createElement('span');
+                        lastAccuracySpan.textContent = `前回: ${!isNaN(latestRecord.accuracy) ? latestRecord.accuracy.toFixed(1) : '-.-'}%`;
+                        accuracyInfoDiv.appendChild(lastAccuracySpan);
+                        
+                        accuracyInfoDiv.appendChild(document.createElement('br')); // 改行
+
+                        const overallAccuracySpan = document.createElement('span');
+                        overallAccuracySpan.textContent = `通算: ${!isNaN(overallAccuracy) ? overallAccuracy.toFixed(1) : '-.-'}%`;
+                        accuracyInfoDiv.appendChild(overallAccuracySpan);
+
+                        console.log(`Set ${setId}: Last Acc=${latestRecord.accuracy}, Overall Acc=${overallAccuracy}`); // デバッグ用
+                    } else {
+                        // 記録がない場合
+                        accuracyInfoDiv.innerHTML = `<span>前回: -.-%</span><br><span>通算: -.-%</span>`;
+                        console.log(`Set ${setId}: No records yet.`); // デバッグ用
+                    }
+                    button.appendChild(accuracyInfoDiv);
+                    
+                    // 実際のクイズに使用する問題を抽出
+                    const subSetQuestionsForQuiz = selectedSuperSetQuestions.slice(subSetStartRelativeIndex, subSetEndRelativeIndex);
+                    
+                    // デバッグ用: 渡される問題数が正しいかコンソールで確認
+                    console.log(`Button ${setId} will start quiz with ${subSetQuestionsForQuiz.length} questions.`);
+
+                    button.addEventListener('click', () => {
+                        currentSubSetId = setId; // 現在のセットIDを保存
+                        startQuiz(subSetQuestionsForQuiz)
+                    });
+                    subSetSelectionButtonsContainer.appendChild(button);
+                }
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            function generateOptions(correctAnswer) {
+                const allPossibleAnswers = Array.from(new Set(allQuestionsData.map(q => q["解答"])));
+                
+                let options = [correctAnswer];
+
+                while (options.length < 4) {
+                    const randomIndex = Math.floor(Math.random() * allPossibleAnswers.length);
+                    const randomAnswer = allPossibleAnswers[randomIndex];
+                    if (!options.includes(randomAnswer)) {
+                        options.push(randomAnswer);
+                    }
+                }
+                shuffleArray(options);
+                return options;
+            }
+
+            function displayQuestion() {
+                feedbackElement.textContent = '';
+                resultDisplayElement.textContent = ''; // 問題表示時に正解率表示をクリア
+                nextQuestionButton.classList.add('hidden'); // 次の問題ボタンは最初は非表示
+
+                if (currentIndex < currentQuestions.length) {
+                    const currentQuiz = currentQuestions[currentIndex];
+                    questionElement.textContent = currentQuiz["問題"];
+                    questionCounterElement.textContent = `${currentIndex + 1}/${currentQuestions.length} 問目`; // 問題番号表示
+                    
+                    const options = generateOptions(currentQuiz["解答"]);
+                    optionsContainer.innerHTML = '';
+
+                    options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.classList.add('option-button');
+                        button.textContent = option;
+                        button.addEventListener('click', () => selectAnswer(button, option, currentQuiz["解答"]));
+                        optionsContainer.appendChild(button);
+                    });
+                    enableOptions();
+                } else {
+                    // セット終了
+                    const currentSetAccuracy = (currentQuestions.length > 0) ? (correctAnswersCount / currentQuestions.length) * 100 : 0;
+                    
+                    // 学習記録を保存
+                    if (currentSubSetId) {
+                        saveLearningRecord(currentSubSetId, correctAnswersCount, currentQuestions.length);
+                    }
+
+                    questionCounterElement.textContent = ''; // 問題番号をクリア
+                    questionElement.textContent = "このセットの問題はすべて終了しました！";
+                    optionsContainer.innerHTML = '';
+                    feedbackElement.textContent = "お疲れ様でした！";
+                    
+                    // 正解率の表示
+                    let resultHtml = `正解率: ${currentSetAccuracy.toFixed(1)}%`;
+                    
+                    // ここで再度記録を読み込むことで、今保存したばかりのデータも含む最新の記録が取得される
+                    const records = loadLearningRecords(); 
+                    if (records[currentSubSetId] && records[currentSubSetId].length > 0) {
+                        const recordsForSet = records[currentSubSetId];
+                        // 最新の記録は、今保存したばかりのものが最後にあるはず
+                        const latestRecord = recordsForSet[recordsForSet.length - 1]; 
+
+                        let totalCorrectAll = 0;
+                        let totalAttemptedAll = 0;
+                        recordsForSet.forEach(rec => {
+                            totalCorrectAll += rec.correct;
+                            totalAttemptedAll += rec.attempted;
+                        });
+                        // 0除算対策
+                        const overallAccuracy = (totalAttemptedAll > 0) ? (totalCorrectAll / totalAttemptedAll) * 100 : 0; 
+                        
+                        resultHtml += `<span class="accuracy-detail">（前回: ${!isNaN(latestRecord.accuracy) ? latestRecord.accuracy.toFixed(1) : '-.-'}% / 通算: ${!isNaN(overallAccuracy) ? overallAccuracy.toFixed(1) : '-.-'}%）</span>`;
+                    } else {
+                        // 記録がない場合も表示を統一 (念のため)
+                         resultHtml += `<span class="accuracy-detail">（前回: -.-% / 通算: -.-%）</span>`;
+                    }
+                    resultDisplayElement.innerHTML = resultHtml;
+
+
+                    nextQuestionButton.classList.add('hidden'); // 次の問題ボタンは非表示（セット終了時）
+                }
+            }
+
+            function selectAnswer(selectedButton, selectedAnswer, correctAnswer) {
+                disableOptions();
+
+                if (selectedAnswer === correctAnswer) {
+                    selectedButton.classList.add('correct');
+                    feedbackElement.textContent = "正解！";
+                    feedbackElement.style.color = '#28a745'; /* 緑 */
+                    correctAnswersCount++; // 正解数をインクリメント
+                } else {
+                    selectedButton.classList.add('wrong');
+                    feedbackElement.textContent = "不正解...";
+                    feedbackElement.style.color = '#dc3545'; /* 赤 */
+
+                    Array.from(optionsContainer.children).forEach(button => {
+                        if (button.textContent === correctAnswer) {
+                            button.classList.add('correct');
+                        }
+                    });
+                }
+                nextQuestionButton.classList.remove('hidden'); // 解答後に次の問題ボタンを表示
+            }
+
+            function enableOptions() {
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = false;
+                    button.classList.remove('correct', 'wrong');
+                });
+            }
+
+            function disableOptions() {
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                });
+            }
+
+            // 最終的なクイズ開始
+            function startQuiz(questionsToUse) {
+                if (questionsToUse.length === 0) {
+                    console.warn("開始しようとしたクイズセットに問題が含まれていません。");
+                    alert("選択された範囲に問題がありませんでした。前の画面に戻ります。");
+                    // 強制的にサブ選択画面に戻る
+                    displaySubSelectionScreen(currentSuperSetStartIndex, currentSuperSetStartIndex + selectedSuperSetQuestions.length);
+                    return; 
+                }
+
+                currentQuestions = [...questionsToUse]; // 選択された小範囲の問題をコピー
+                shuffleArray(currentQuestions); // 小範囲内の問題をシャッフル
+                currentIndex = 0;
+                correctAnswersCount = 0; // 新しいセット開始時に正解数をリセット
+
+                subSelectionScreen.classList.add('hidden');
+                subSelectionScreen.style.display = 'none'; // sub-selection-screenを確実に非表示に
+                quizArea.classList.remove('hidden');
+                quizArea.style.display = 'block'; // quiz-areaを確実に表示に
+
+                // クイズエリアに入った時点で戻るボタンを表示する
+                backToSubSelectionButton.classList.remove('hidden');
+                backToTitleFromQuizButton.classList.remove('hidden');
+
+                displayQuestion();
+            }
+
+            // イベントリスナーの設定
+            nextQuestionButton.addEventListener('click', () => {
+                currentIndex++;
+                displayQuestion();
+            });
+
+            backToMainButton.addEventListener('click', displayTitleScreen); // サブ選択画面からメインに戻る
+
+            backToSubSelectionButton.addEventListener('click', () => {
+                // クイズ画面から、直前に選択していた大範囲のサブ選択画面に戻る
+                displaySubSelectionScreen(currentSuperSetStartIndex, currentSuperSetStartIndex + selectedSuperSetQuestions.length);
+            });
+            
+            // 新しい「タイトルへ戻る」ボタンのイベントリスナー
+            backToTitleFromQuizButton.addEventListener('click', displayTitleScreen);
+
+            // アプリ起動時にJSONデータを読み込む
+            loadQuestions();
+        });
+    </script>
+</body>
+</html>
